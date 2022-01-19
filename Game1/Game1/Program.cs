@@ -94,7 +94,8 @@ namespace Game1 {
 
         public static void Main(string[] args) {
             Console.WriteLine(
-                "You control the Player (P). To win, pick up the item (I) and then collide with the NPC (N). If you collide with the NPC before picking up the item, you lose!");
+                "You control the Player (P). To win, pick up the item (I) and then collide with the NPC (N).");
+            Console.WriteLine("If you collide with the NPC before picking up the item, you lose!");
             Console.WriteLine("Hit any key to continue.");
             Console.ReadKey();
 
@@ -170,7 +171,11 @@ namespace Game1 {
                 if (player.Position == npc.Position ||
                     (player.Position == oldNpcPosition && oldPlayerPosition == npc.Position)) {
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(playerHasItem ? "You win!" : "You lose!");
+                    var middleRow = Rows / 2;
+                    var middleCol = Cols / 2 - ("You lose!".Length / 2);
+                    Console.SetCursorPosition(middleCol, middleRow);
+                    Console.Write(playerHasItem ? "You win!" : "You lose!");
+                    Console.SetCursorPosition(0, Rows);
 
                     running = false;
                 }
