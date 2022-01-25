@@ -92,7 +92,7 @@ namespace Game1 {
 
         private static readonly Coord MapBoundaries = new Coord(Rows, Cols); // not really a coord but whatever
 
-        public static void Main(string[] args) {
+        public static void OldMain(string[] args) {
             Console.WriteLine(
                 "You control the Player (P). To win, pick up the item (I) and then collide with the NPC (N).");
             Console.WriteLine("If you collide with the NPC before picking up the item, you lose!");
