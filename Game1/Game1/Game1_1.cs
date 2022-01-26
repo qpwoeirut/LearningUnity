@@ -132,7 +132,7 @@ namespace Game1_1 {
                     entity.Draw();
                 }
 
-                Console.SetCursorPosition(0, Math.Min(Console.BufferHeight - 1, Rows));
+                Console.SetCursorPosition(0, Rows);
             }
 
             public void GetUserInput() {
@@ -184,7 +184,7 @@ namespace Game1_1 {
                     var middleCol = Cols / 2 - ("You lose!".Length / 2);
                     Console.SetCursorPosition(middleCol, middleRow);
                     Console.Write(PlayerHasItem ? "You win!" : "You lose!");
-                    Console.SetCursorPosition(0, Math.Min(Console.BufferHeight - 1, Rows));
+                    Console.SetCursorPosition(0, Rows);
 
                     Running = false;
                 }
