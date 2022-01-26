@@ -63,6 +63,12 @@ namespace Game1_1 {
                 Direction = Coord.Zero;
             }
         }
+        
+        private enum Difficulty {
+            Easy = 60 * 1000 + 500,
+            Medium = 45 * 1000 + 100,
+            Hard = 30 * 1000 + 10
+        }
 
         private class Game {
             private const string MapStr =
@@ -92,14 +98,15 @@ namespace Game1_1 {
             private Entity _player, _npc, _item;
             private List<Entity> _entities;
             
-            private int _difficulty;  // corresponds to the amount of time between npc moves
+            private Difficulty _difficulty;  // corresponds to the amount of time between npc moves
             private int _lastDraw;
             private int _lastNpcMove;
             private bool _moveNpcOk = true;
             private const int DrawPause = 100;
 
-            private readonly int _startTime = Environment.TickCount;
-            private const int TimeLimit = 30 * 1000;  // time to win, in milliseconds
+            private int _startTime = Int32.MaxValue;  // this will be overwritten in Game.Init
+            private int _timeLimit;
+            private int _npcPause;
             
             public bool Running;
             private bool _playerHasItem;
@@ -122,6 +129,8 @@ namespace Game1_1 {
                 
                 Running = true;
                 _playerHasItem = false;
+
+                _startTime = Environment.TickCount;
             }
 
             private void SendWelcome() {
@@ -129,19 +138,21 @@ namespace Game1_1 {
                     "You control the Player (P). To win, pick up the item (I) and then collide with the NPC (N).");
                 Console.WriteLine("If you collide with the NPC before picking up the item, you lose!");
                 _difficulty = ReadDifficultyInput();
+                _timeLimit = (int)_difficulty / 1000;
+                _npcPause = (int)_difficulty % 1000;
                 Console.WriteLine("\nHit any key to continue.");
                 Console.ReadKey();
                 Console.Clear();
             }
 
-            private static int ReadDifficultyInput() {
+            private static Difficulty ReadDifficultyInput() {
                 Console.WriteLine("Choose the [E]asy, [M]edium, or [H]ard difficulty.");
                 var difficultyChar = Char.ToLower(Console.ReadKey().KeyChar);
                 while (!"emh".Contains(difficultyChar.ToString())) difficultyChar = Char.ToLower(Console.ReadKey().KeyChar);
                 switch (difficultyChar) {
-                    case 'e': return 500;
-                    case 'm': return 100;
-                    case 'h': return 10;
+                    case 'e': return Difficulty.Easy;
+                    case 'm': return Difficulty.Medium;
+                    case 'h': return Difficulty.Hard;
                 }
                 throw new Exception();
             }
@@ -191,7 +202,7 @@ namespace Game1_1 {
             public void Pause() {
                 while (Environment.TickCount < _lastDraw + DrawPause) Thread.Sleep(5);
                 _lastDraw = Environment.TickCount;
-                _moveNpcOk = _lastDraw >= _lastNpcMove + _difficulty;
+                _moveNpcOk = _lastDraw >= _lastNpcMove + _npcPause;
                 if (_moveNpcOk) _lastNpcMove = _lastDraw;
             }
 
@@ -217,18 +228,18 @@ namespace Game1_1 {
 
                 if (_player.Position == _npc.Position ||
                     (_player.Position == oldNpcPosition && oldPlayerPosition == _npc.Position)) {
-                    Console.ForegroundColor = ConsoleColor.White;
                     WriteToCenter(_playerHasItem ? "You win!" : "You lose!");
                     Running = false;
                 }
 
-                if (_startTime + TimeLimit <= Environment.TickCount) {
+                if (_startTime + _timeLimit * 1000 <= Environment.TickCount) {
                     WriteToCenter("Ran out of time!");
                     Running = false;
                 }
             }
 
             private void WriteToCenter(string message) {
+                Console.ForegroundColor = ConsoleColor.DarkMagenta;
                 var middleRow = Rows / 2;
                 var middleCol = (Cols - message.Length) / 2;
                 Console.SetCursorPosition(middleCol, middleRow);
