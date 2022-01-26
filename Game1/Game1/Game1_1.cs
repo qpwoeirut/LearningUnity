@@ -38,7 +38,7 @@ namespace Game1_1 {
             public static readonly Coord[] Directions = {Up, Left, Down, Right};
         }
 
-        public class Entity {
+        private class Entity {
             public Coord Position;
             public Coord Direction;
             private readonly char _icon;
@@ -65,14 +65,6 @@ namespace Game1_1 {
         }
 
         private class Game {
-            private static readonly Random Rand = new Random();
-            private char[,] _map;
-            private Entity _player, _npc, _item;
-            private List<Entity> _entities;
-            public bool Running;
-            public bool PlayerHasItem;
-            private ConsoleKeyInfo _userInput;
-
             private const string MapStr =
                 "..............................\n" +
                 "..............................\n" +
@@ -93,13 +85,18 @@ namespace Game1_1 {
             private static readonly int Cols = MapStr.IndexOf('\n');
             private static readonly int Rows = MapStr.Length / (Cols + 1);
             private static readonly Coord MapBoundaries = new Coord(Rows, Cols); // not really a coord but whatever
+            
+            private static readonly Random Rand = new Random();
+            private char[,] _map;
+            private Entity _player, _npc, _item;
+            private List<Entity> _entities;
+            public bool Running;
+            public bool PlayerHasItem;
+            private ConsoleKeyInfo _userInput;
+            private int _difficulty;
 
             public void Init() {
-                Console.WriteLine(
-                    "You control the Player (P). To win, pick up the item (I) and then collide with the NPC (N).");
-                Console.WriteLine("If you collide with the NPC before picking up the item, you lose!");
-                Console.WriteLine("Hit any key to continue.");
-                Console.ReadKey();
+                SendWelcome();
 
                 _map = new char[Rows, Cols];
                 for (int row = 0; row < Rows; ++row) {
@@ -117,6 +114,27 @@ namespace Game1_1 {
                 PlayerHasItem = false;
             }
 
+            private void SendWelcome() {
+                Console.WriteLine(
+                    "You control the Player (P). To win, pick up the item (I) and then collide with the NPC (N).");
+                Console.WriteLine("If you collide with the NPC before picking up the item, you lose!");
+                _difficulty = ReadDifficultyInput();
+                Console.WriteLine("\nHit any key to continue.");
+                Console.ReadKey();
+            }
+
+            private static int ReadDifficultyInput() {
+                Console.WriteLine("Choose the [E]asy, [M]edium, or [H]ard difficulty.");
+                var difficultyChar = Char.ToLower(Console.ReadKey().KeyChar);
+                while (!"emh".Contains(difficultyChar.ToString())) difficultyChar = Char.ToLower(Console.ReadKey().KeyChar);
+                switch (difficultyChar) {
+                    case 'e': return 100;
+                    case 'm': return 200;
+                    case 'h': return 300;
+                }
+                throw new Exception();
+            }
+
             public void Draw() {
                 Console.SetCursorPosition(0, 0);
                 for (int row = 0; row < Rows; ++row) {
@@ -132,7 +150,7 @@ namespace Game1_1 {
                     entity.Draw();
                 }
 
-                Console.SetCursorPosition(0, Rows);
+                ConsoleSetCursorToEnd();
             }
 
             public void GetUserInput() {
@@ -157,6 +175,10 @@ namespace Game1_1 {
                 }
 
                 _npc.Direction = Coord.Directions[Math.Abs(Environment.TickCount) % Coord.Directions.Length];
+            }
+
+            public void Pause() {
+                
             }
 
             public void Update() {
@@ -184,20 +206,25 @@ namespace Game1_1 {
                     var middleCol = Cols / 2 - ("You lose!".Length / 2);
                     Console.SetCursorPosition(middleCol, middleRow);
                     Console.Write(PlayerHasItem ? "You win!" : "You lose!");
-                    Console.SetCursorPosition(0, Rows);
+                    ConsoleSetCursorToEnd();
 
                     Running = false;
                 }
             }
 
+            private void ConsoleSetCursorToEnd() {
+                Console.SetCursorPosition(0, Math.Min(Console.BufferHeight - 1, Rows));
+            }
+
             private static Coord RandCoord() {
-                return new Coord(Rand.Next(MapBoundaries.Row - 1), Rand.Next(MapBoundaries.Col - 1));
+                return new Coord(Rand.Next(Rows), Rand.Next(Cols));
             }
 
             // TODO make sure things dont spawn on top of each other
             private Coord RandValidCoord() {
                 var c = RandCoord();
-                return MapValueAt(c) == '.' ? c : RandValidCoord();
+                while (MapValueAt(c) != '.') c = RandCoord();
+                return c;
             }
 
             private char MapValueAt(Coord coord) {
@@ -210,7 +237,7 @@ namespace Game1_1 {
             g.Init();
             while (g.Running) {
                 g.Draw();
-                System.Threading.Thread.Sleep(100);
+                g.Pause();
                 g.GetUserInput();
                 g.Update();
             }
