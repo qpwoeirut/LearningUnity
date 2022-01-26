@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Game1_1 {
-    // TODO: stop npc from moving more than 2x/sec
     class Program {
         public readonly struct Coord {
             public readonly short Row, Col;
@@ -87,13 +87,20 @@ namespace Game1_1 {
             private static readonly Coord MapBoundaries = new Coord(Rows, Cols); // not really a coord but whatever
             
             private static readonly Random Rand = new Random();
+            
             private char[,] _map;
             private Entity _player, _npc, _item;
             private List<Entity> _entities;
+            
+            private int _difficulty;  // corresponds to the amount of time between npc moves
+            private int _lastDraw;
+            private int _lastNpcMove;
+            private bool _moveNpcOk = true;
+            private const int DrawPause = 100;
+            
             public bool Running;
-            public bool PlayerHasItem;
+            private bool _playerHasItem;
             private ConsoleKeyInfo _userInput;
-            private int _difficulty;
 
             public void Init() {
                 SendWelcome();
@@ -111,7 +118,7 @@ namespace Game1_1 {
                 _entities = new List<Entity> {_player, _npc, _item};
                 
                 Running = true;
-                PlayerHasItem = false;
+                _playerHasItem = false;
             }
 
             private void SendWelcome() {
@@ -121,6 +128,7 @@ namespace Game1_1 {
                 _difficulty = ReadDifficultyInput();
                 Console.WriteLine("\nHit any key to continue.");
                 Console.ReadKey();
+                Console.Clear();
             }
 
             private static int ReadDifficultyInput() {
@@ -128,9 +136,9 @@ namespace Game1_1 {
                 var difficultyChar = Char.ToLower(Console.ReadKey().KeyChar);
                 while (!"emh".Contains(difficultyChar.ToString())) difficultyChar = Char.ToLower(Console.ReadKey().KeyChar);
                 switch (difficultyChar) {
-                    case 'e': return 100;
-                    case 'm': return 200;
-                    case 'h': return 300;
+                    case 'e': return 500;
+                    case 'm': return 100;
+                    case 'h': return 10;
                 }
                 throw new Exception();
             }
@@ -178,7 +186,10 @@ namespace Game1_1 {
             }
 
             public void Pause() {
-                
+                while (Environment.TickCount < _lastDraw + DrawPause) Thread.Sleep(5);
+                _lastDraw = Environment.TickCount;
+                _moveNpcOk = _lastDraw >= _lastNpcMove + _difficulty;
+                if (_moveNpcOk) _lastNpcMove = _lastDraw;
             }
 
             public void Update() {
@@ -193,8 +204,10 @@ namespace Game1_1 {
                     }
                 }
 
+                if (!_moveNpcOk) _npc.Position = oldNpcPosition;
+
                 if (_player.Position == _item.Position) {
-                    PlayerHasItem = true;
+                    _playerHasItem = true;
                     _entities.Remove(_item);
                     _npc.Color = ConsoleColor.Blue;
                 }
@@ -205,7 +218,7 @@ namespace Game1_1 {
                     var middleRow = Rows / 2;
                     var middleCol = Cols / 2 - ("You lose!".Length / 2);
                     Console.SetCursorPosition(middleCol, middleRow);
-                    Console.Write(PlayerHasItem ? "You win!" : "You lose!");
+                    Console.Write(_playerHasItem ? "You win!" : "You lose!");
                     ConsoleSetCursorToEnd();
 
                     Running = false;
