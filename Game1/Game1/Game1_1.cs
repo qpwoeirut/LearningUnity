@@ -98,13 +98,13 @@ namespace Game1_1 {
             private Entity _player, _npc, _item;
             private List<Entity> _entities;
             
-            private Difficulty _difficulty;  // corresponds to the amount of time between npc moves
+            private Difficulty _difficulty;
             private int _lastDraw;
             private int _lastNpcMove;
             private bool _moveNpcOk = true;
             private const int DrawPause = 100;
 
-            private int _startTime = Int32.MaxValue;  // this will be overwritten in Game.Init
+            private int _startTime;
             private int _timeLimit;
             private int _npcPause;
             
@@ -140,15 +140,16 @@ namespace Game1_1 {
                 _difficulty = ReadDifficultyInput();
                 _timeLimit = (int)_difficulty / 1000;
                 _npcPause = (int)_difficulty % 1000;
-                Console.WriteLine("\nHit any key to continue.");
+                Console.WriteLine($"\nYou are on difficulty {_difficulty}, so you have {_timeLimit} seconds to win.");
+                Console.WriteLine("Hit any key to continue.");
                 Console.ReadKey();
                 Console.Clear();
             }
 
             private static Difficulty ReadDifficultyInput() {
                 Console.WriteLine("Choose the [E]asy, [M]edium, or [H]ard difficulty.");
-                var difficultyChar = Char.ToLower(Console.ReadKey().KeyChar);
-                while (!"emh".Contains(difficultyChar.ToString())) difficultyChar = Char.ToLower(Console.ReadKey().KeyChar);
+                var difficultyChar = char.ToLower(Console.ReadKey().KeyChar);
+                while (!"emh".Contains(difficultyChar.ToString())) difficultyChar = char.ToLower(Console.ReadKey().KeyChar);
                 switch (difficultyChar) {
                     case 'e': return Difficulty.Easy;
                     case 'm': return Difficulty.Medium;
