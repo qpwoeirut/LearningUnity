@@ -66,12 +66,12 @@ namespace Game1_1 {
 
         private class Game {
             private static readonly Random Rand = new Random();
-            char[,] map;
-            Entity player, npc, item;
-            List<Entity> entities;
+            private char[,] _map;
+            private Entity _player, _npc, _item;
+            private List<Entity> _entities;
             public bool Running;
             public bool PlayerHasItem;
-            ConsoleKeyInfo userInput;
+            private ConsoleKeyInfo _userInput;
 
             private const string MapStr =
                 "..............................\n" +
@@ -101,17 +101,17 @@ namespace Game1_1 {
                 Console.WriteLine("Hit any key to continue.");
                 Console.ReadKey();
 
-                map = new char[Rows, Cols];
+                _map = new char[Rows, Cols];
                 for (int row = 0; row < Rows; ++row) {
                     for (int col = 0; col < Cols; ++col) {
-                        map[row, col] = MapStr[row * (Cols + 1) + col];
+                        _map[row, col] = MapStr[row * (Cols + 1) + col];
                     }
                 }
 
-                player = new Entity(RandValidCoord(), 'P', ConsoleColor.Green);
-                npc = new Entity(RandValidCoord(), 'N', ConsoleColor.Red);
-                item = new Entity(RandValidCoord(), 'I', ConsoleColor.Yellow);
-                entities = new List<Entity> {player, npc, item};
+                _player = new Entity(RandValidCoord(), 'P', ConsoleColor.Green);
+                _npc = new Entity(RandValidCoord(), 'N', ConsoleColor.Red);
+                _item = new Entity(RandValidCoord(), 'I', ConsoleColor.Yellow);
+                _entities = new List<Entity> {_player, _npc, _item};
                 
                 Running = true;
                 PlayerHasItem = false;
@@ -123,12 +123,12 @@ namespace Game1_1 {
                     // maybe this will speed up the buffering thing
                     string tmp = "";
                     for (int col = 0; col < Cols; ++col) {
-                        tmp += map[row, col];
+                        tmp += _map[row, col];
                     }
                     Console.WriteLine(tmp);
                 }
 
-                foreach (var entity in entities) {
+                foreach (var entity in _entities) {
                     entity.Draw();
                 }
 
@@ -136,19 +136,19 @@ namespace Game1_1 {
             }
 
             public void GetUserInput() {
-                userInput = Console.KeyAvailable ? Console.ReadKey() : new ConsoleKeyInfo();
-                switch (userInput.KeyChar) {
+                _userInput = Console.KeyAvailable ? Console.ReadKey() : new ConsoleKeyInfo();
+                switch (_userInput.KeyChar) {
                     case 'w':
-                        player.Direction = Coord.Up;
+                        _player.Direction = Coord.Up;
                         break;
                     case 'a':
-                        player.Direction = Coord.Left;
+                        _player.Direction = Coord.Left;
                         break;
                     case 's':
-                        player.Direction = Coord.Down;
+                        _player.Direction = Coord.Down;
                         break;
                     case 'd':
-                        player.Direction = Coord.Right;
+                        _player.Direction = Coord.Right;
                         break;
                     case 'q':
                     case (char) 27:
@@ -156,14 +156,14 @@ namespace Game1_1 {
                         break;
                 }
 
-                npc.Direction = Coord.Directions[Math.Abs(Environment.TickCount) % Coord.Directions.Length];
+                _npc.Direction = Coord.Directions[Math.Abs(Environment.TickCount) % Coord.Directions.Length];
             }
 
             public void Update() {
-                var oldPlayerPosition = player.Position;
-                var oldNpcPosition = npc.Position;
+                var oldPlayerPosition = _player.Position;
+                var oldNpcPosition = _npc.Position;
 
-                foreach (var entity in entities) {
+                foreach (var entity in _entities) {
                     Coord previousPos = entity.Position;
                     entity.Move();
                     if (!entity.Position.IsInside(MapBoundaries) || MapValueAt(entity.Position) == '#') {
@@ -171,14 +171,14 @@ namespace Game1_1 {
                     }
                 }
 
-                if (player.Position == item.Position) {
+                if (_player.Position == _item.Position) {
                     PlayerHasItem = true;
-                    entities.Remove(item);
-                    npc.Color = ConsoleColor.Blue;
+                    _entities.Remove(_item);
+                    _npc.Color = ConsoleColor.Blue;
                 }
 
-                if (player.Position == npc.Position ||
-                    (player.Position == oldNpcPosition && oldPlayerPosition == npc.Position)) {
+                if (_player.Position == _npc.Position ||
+                    (_player.Position == oldNpcPosition && oldPlayerPosition == _npc.Position)) {
                     Console.ForegroundColor = ConsoleColor.White;
                     var middleRow = Rows / 2;
                     var middleCol = Cols / 2 - ("You lose!".Length / 2);
@@ -194,13 +194,14 @@ namespace Game1_1 {
                 return new Coord(Rand.Next(MapBoundaries.Row - 1), Rand.Next(MapBoundaries.Col - 1));
             }
 
+            // TODO make sure things dont spawn on top of each other
             private Coord RandValidCoord() {
                 var c = RandCoord();
                 return MapValueAt(c) == '.' ? c : RandValidCoord();
             }
 
             private char MapValueAt(Coord coord) {
-                return map[coord.Row, coord.Col];
+                return _map[coord.Row, coord.Col];
             }
         }
 
