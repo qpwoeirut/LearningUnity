@@ -168,12 +168,14 @@ namespace Game1_1 {
                     }
                     Console.WriteLine(tmp);
                 }
+                var timeElapsed = (Environment.TickCount - _startTime) / 1000;
+                Console.WriteLine($"Time: {timeElapsed}");
 
                 foreach (var entity in _entities) {
                     entity.Draw();
                 }
 
-                ConsoleSetCursorToEnd();
+                Console.SetCursorPosition(0, Console.BufferHeight - 1);
             }
 
             public void GetUserInput() {
@@ -245,11 +247,7 @@ namespace Game1_1 {
                 var middleCol = (Cols - message.Length) / 2;
                 Console.SetCursorPosition(middleCol, middleRow);
                 Console.Write(message);
-                ConsoleSetCursorToEnd();
-            }
-
-            private void ConsoleSetCursorToEnd() {
-                Console.SetCursorPosition(0, Math.Min(Console.BufferHeight - 1, Rows));
+                Console.SetCursorPosition(0, Console.BufferHeight - 1);
             }
 
             private static Coord RandCoord() {
