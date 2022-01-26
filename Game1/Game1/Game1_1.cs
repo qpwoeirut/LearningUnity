@@ -125,7 +125,7 @@ namespace Game1_1 {
                 _player = new Entity(RandValidCoord(), 'P', ConsoleColor.Green);
                 _npc = new Entity(RandValidCoord(), 'N', ConsoleColor.Red);
                 _item = new Entity(RandValidCoord(), 'I', ConsoleColor.Yellow);
-                _entities = new List<Entity> {_player, _npc, _item};
+                _entities = new List<Entity> {_item, _npc, _player};
                 
                 Running = true;
                 _playerHasItem = false;
@@ -242,12 +242,14 @@ namespace Game1_1 {
             }
 
             private void WriteToCenter(string message) {
+                var currentColor = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.DarkMagenta;
                 var middleRow = Rows / 2;
                 var middleCol = (Cols - message.Length) / 2;
                 Console.SetCursorPosition(middleCol, middleRow);
                 Console.Write(message);
                 Console.SetCursorPosition(0, Console.BufferHeight - 1);
+                Console.ForegroundColor = currentColor;
             }
 
             private static Coord RandCoord() {
@@ -269,11 +271,12 @@ namespace Game1_1 {
         public static void Main(string[] args) {
             var g = new Game();
             g.Init();
+            g.Draw();
             while (g.Running) {
-                g.Draw();
                 g.Pause();
                 g.GetUserInput();
                 g.Update();
+                g.Draw();
             }
         }
     }
