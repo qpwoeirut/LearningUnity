@@ -75,7 +75,7 @@ namespace Game1_1 {
         }
         
         private enum GameState {
-            Running, Won, BlendedWithHopperAndObiWan3AndThatRandomFrogWhichIsGreen, RanOutOfTime, Quit
+            Running, Won, BlendedWithHopperAndThatRandomFrogWhichIsGreen, RanOutOfTime, Quit
         }
 
         private class Game {
@@ -295,7 +295,7 @@ namespace Game1_1 {
                 if (_player.Position == _npc.Position ||
                     (_player.Position == oldNpcPosition && oldPlayerPosition == _npc.Position)) {
                     WriteToCenter(_playerHasItem ? "You win!" : "You lose!");
-                    State = _playerHasItem ? GameState.Won : GameState.BlendedWithHopperAndObiWan3AndThatRandomFrogWhichIsGreen;
+                    State = _playerHasItem ? GameState.Won : GameState.BlendedWithHopperAndThatRandomFrogWhichIsGreen;
                 }
 
                 if (_startTime + _timeLimit * 1000 <= Environment.TickCount) {
@@ -322,7 +322,7 @@ namespace Game1_1 {
                     case GameState.RanOutOfTime:
                         WriteToCenter("Ran out of time!");
                         break;
-                    case GameState.BlendedWithHopperAndObiWan3AndThatRandomFrogWhichIsGreen:
+                    case GameState.BlendedWithHopperAndThatRandomFrogWhichIsGreen:
                         WriteToCenter("Enjoy the blender!");
                         break;
                 }
