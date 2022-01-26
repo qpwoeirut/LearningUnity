@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Game1_1 {
@@ -26,6 +27,10 @@ namespace Game1_1 {
 
             public static Coord operator +(Coord a, Coord b) {
                 return new Coord(a.Row + b.Row, a.Col + b.Col);
+            }
+
+            public List<Coord> Neighbors() {
+                return new List<Coord> { this + Up, this + Left, this + Down, this + Right };
             }
 
             public static Coord
@@ -64,10 +69,10 @@ namespace Game1_1 {
             }
         }
         
-        private enum Difficulty {  // limit in seconds * 1000 + delay before npc moves in milliseconds
-            Easy = 60 * 1000 + 500,
-            Medium = 45 * 1000 + 100,
-            Hard = 30 * 1000 + 10
+        private enum Difficulty {  // npc intelligence out of 100, limit in seconds, delay before npc moves in milliseconds
+            Easy = (70 * 100 + 60) * 1000 + 500,
+            Medium = (75 * 100 + 45) * 1000 + 300,
+            Hard = (80 * 100 + 30) * 1000 + 100
         }
         
         private enum GameState {
@@ -95,6 +100,7 @@ namespace Game1_1 {
             private static readonly int Cols = MapStr.IndexOf('\n');
             private static readonly int Rows = MapStr.Length / (Cols + 1);
             private static readonly Coord MapBoundaries = new Coord(Rows, Cols); // not really a coord but whatever
+            private static readonly int LargeDistance = Rows * Cols;  // this number is larger than the length of any simple path through the grid
             
             private static readonly Random Rand = new Random();
             
@@ -111,6 +117,9 @@ namespace Game1_1 {
             private int _startTime;
             private int _timeLimit;
             private int _npcPause;
+            private int _npcIntelligence;
+
+            private int[,] _dist;
 
             public GameState State;
             private bool _playerHasItem;
@@ -142,8 +151,9 @@ namespace Game1_1 {
                     "You control the Player (P). To win, pick up the item (I) and then collide with the NPC (N).");
                 Console.WriteLine("If you collide with the NPC before picking up the item, you lose!");
                 _difficulty = ReadDifficultyInput();
-                _timeLimit = (int)_difficulty / 1000;
-                _npcPause = (int)_difficulty % 1000;
+                _npcIntelligence = (int) _difficulty / (1000 * 100);
+                _timeLimit = ((int) _difficulty / 1000) % 100;
+                _npcPause = (int) _difficulty % 1000;
                 Console.WriteLine($"\nYou are on difficulty {_difficulty}, so you have {_timeLimit} seconds to win.");
                 Console.WriteLine("Hit any key to continue.");
                 Console.ReadKey();
@@ -203,7 +213,57 @@ namespace Game1_1 {
                         break;
                 }
 
-                _npc.Direction = Coord.Directions[Math.Abs(Environment.TickCount) % Coord.Directions.Length];
+                if (_npcIntelligence >= Rand.Next(1, 101)) {  // npc has a chance to find shortest path
+                    _npc.Direction = CalculateBestMove(_npc.Position);
+                } else {  // otherwise picks random move
+                    _npc.Direction = Coord.Directions[Math.Abs(Environment.TickCount) % Coord.Directions.Length];
+                }
+            }
+
+            private Coord CalculateBestMove(Coord start) {
+                CalculateDistanceGrid(_player.Position);
+                
+                // run away if player has item, chase if player doesn't
+                var bestDistance = _playerHasItem ? 0 : LargeDistance;
+                var bestDirection = Coord.Zero;
+                foreach (var direction in Coord.Directions) {
+                    var newCoord = start + direction;
+                    if (!PositionIsValid(newCoord)) continue;
+                    if ((_playerHasItem && bestDistance < _dist[newCoord.Row, newCoord.Col]) || 
+                        (!_playerHasItem && bestDistance > _dist[newCoord.Row, newCoord.Col])) {
+                        bestDistance = _dist[newCoord.Row, newCoord.Col];
+                        bestDirection = direction;
+                    }
+                }
+
+                return bestDirection;
+            }
+
+            private void CalculateDistanceGrid(Coord start) {  // bfs go brrr
+                _dist = new int[Rows, Cols];
+                for (int row = 0; row < Rows; ++row) {
+                    for (int col = 0; col < Cols; ++col) {
+                        _dist[row, col] = LargeDistance;
+                    }
+                }
+
+                _dist[start.Row, start.Col] = 0;
+                var queue = new Queue<Coord>();
+                queue.Enqueue(start);
+                while (queue.Count > 0) {
+                    var cur = queue.Dequeue();
+                    var curDist = _dist[cur.Row, cur.Col];
+                    foreach (var neighbor in cur.Neighbors()) {
+                        if (PositionIsValid(neighbor) && _dist[neighbor.Row, neighbor.Col] > curDist + 1) {
+                            _dist[neighbor.Row, neighbor.Col] = curDist + 1;
+                            queue.Enqueue(neighbor);
+                        }
+                    }
+                }
+            }
+
+            private bool PositionIsValid(Coord position) {
+                return position.IsInside(MapBoundaries) && MapValueAt(position) != '#';
             }
 
             public void Pause() {
@@ -220,7 +280,7 @@ namespace Game1_1 {
                 foreach (var entity in _entities) {
                     Coord previousPos = entity.Position;
                     entity.Move();
-                    if (!entity.Position.IsInside(MapBoundaries) || MapValueAt(entity.Position) == '#') {
+                    if (!PositionIsValid(entity.Position)) {
                         entity.Position = previousPos;
                     }
                 }
