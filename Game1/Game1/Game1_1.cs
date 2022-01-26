@@ -97,6 +97,9 @@ namespace Game1_1 {
             private int _lastNpcMove;
             private bool _moveNpcOk = true;
             private const int DrawPause = 100;
+
+            private readonly int _startTime = Environment.TickCount;
+            private const int TimeLimit = 30 * 1000;  // time to win, in milliseconds
             
             public bool Running;
             private bool _playerHasItem;
@@ -215,14 +218,22 @@ namespace Game1_1 {
                 if (_player.Position == _npc.Position ||
                     (_player.Position == oldNpcPosition && oldPlayerPosition == _npc.Position)) {
                     Console.ForegroundColor = ConsoleColor.White;
-                    var middleRow = Rows / 2;
-                    var middleCol = Cols / 2 - ("You lose!".Length / 2);
-                    Console.SetCursorPosition(middleCol, middleRow);
-                    Console.Write(_playerHasItem ? "You win!" : "You lose!");
-                    ConsoleSetCursorToEnd();
-
+                    WriteToCenter(_playerHasItem ? "You win!" : "You lose!");
                     Running = false;
                 }
+
+                if (_startTime + TimeLimit <= Environment.TickCount) {
+                    WriteToCenter("Ran out of time!");
+                    Running = false;
+                }
+            }
+
+            private void WriteToCenter(string message) {
+                var middleRow = Rows / 2;
+                var middleCol = (Cols - message.Length) / 2;
+                Console.SetCursorPosition(middleCol, middleRow);
+                Console.Write(message);
+                ConsoleSetCursorToEnd();
             }
 
             private void ConsoleSetCursorToEnd() {
