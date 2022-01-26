@@ -64,10 +64,14 @@ namespace Game1_1 {
             }
         }
         
-        private enum Difficulty {
+        private enum Difficulty {  // limit in seconds * 1000 + delay before npc moves in milliseconds
             Easy = 60 * 1000 + 500,
             Medium = 45 * 1000 + 100,
             Hard = 30 * 1000 + 10
+        }
+        
+        private enum GameState {
+            Running, Won, BlendedWithHopperAndObiWan3AndThatRandomFrogWhichIsGreen, RanOutOfTime, Quit
         }
 
         private class Game {
@@ -107,8 +111,8 @@ namespace Game1_1 {
             private int _startTime;
             private int _timeLimit;
             private int _npcPause;
-            
-            public bool Running;
+
+            public GameState State;
             private bool _playerHasItem;
             private ConsoleKeyInfo _userInput;
 
@@ -126,8 +130,8 @@ namespace Game1_1 {
                 _npc = new Entity(RandValidCoord(), 'N', ConsoleColor.Red);
                 _item = new Entity(RandValidCoord(), 'I', ConsoleColor.Yellow);
                 _entities = new List<Entity> {_item, _npc, _player};
-                
-                Running = true;
+
+                State = GameState.Running;
                 _playerHasItem = false;
 
                 _startTime = Environment.TickCount;
@@ -195,7 +199,7 @@ namespace Game1_1 {
                         break;
                     case 'q':
                     case (char) 27:
-                        Running = false;
+                        State = GameState.Quit;
                         break;
                 }
 
@@ -232,12 +236,12 @@ namespace Game1_1 {
                 if (_player.Position == _npc.Position ||
                     (_player.Position == oldNpcPosition && oldPlayerPosition == _npc.Position)) {
                     WriteToCenter(_playerHasItem ? "You win!" : "You lose!");
-                    Running = false;
+                    State = _playerHasItem ? GameState.Won : GameState.BlendedWithHopperAndObiWan3AndThatRandomFrogWhichIsGreen;
                 }
 
                 if (_startTime + _timeLimit * 1000 <= Environment.TickCount) {
                     WriteToCenter("Ran out of time!");
-                    Running = false;
+                    State = GameState.RanOutOfTime;
                 }
             }
 
@@ -250,6 +254,20 @@ namespace Game1_1 {
                 Console.Write(message);
                 Console.SetCursorPosition(0, Console.BufferHeight - 1);
                 Console.ForegroundColor = currentColor;
+            }
+
+            public void WriteFinalMessage() {
+                switch (State) {
+                    case GameState.Won:
+                        WriteToCenter("You won!");
+                        break;
+                    case GameState.RanOutOfTime:
+                        WriteToCenter("Ran out of time!");
+                        break;
+                    case GameState.BlendedWithHopperAndObiWan3AndThatRandomFrogWhichIsGreen:
+                        WriteToCenter("Enjoy the blender!");
+                        break;
+                }
             }
 
             private static Coord RandCoord() {
@@ -272,12 +290,13 @@ namespace Game1_1 {
             var g = new Game();
             g.Init();
             g.Draw();
-            while (g.Running) {
+            while (g.State == GameState.Running) {
                 g.Pause();
                 g.GetUserInput();
                 g.Update();
                 g.Draw();
             }
+            g.WriteFinalMessage();
         }
     }
 }
