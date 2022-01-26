@@ -246,17 +246,16 @@ namespace Game1_1 {
             }
 
             private void WriteToCenter(string message) {
-                var currentColor = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.DarkMagenta;
                 var middleRow = Rows / 2;
                 var middleCol = (Cols - message.Length) / 2;
                 Console.SetCursorPosition(middleCol, middleRow);
                 Console.Write(message);
                 Console.SetCursorPosition(0, Console.BufferHeight - 1);
-                Console.ForegroundColor = currentColor;
             }
 
             public void WriteFinalMessage() {
+                var currentColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.DarkMagenta;
                 switch (State) {
                     case GameState.Won:
                         WriteToCenter("You won!");
@@ -268,6 +267,7 @@ namespace Game1_1 {
                         WriteToCenter("Enjoy the blender!");
                         break;
                 }
+                Console.ForegroundColor = currentColor;
             }
 
             private static Coord RandCoord() {
