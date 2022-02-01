@@ -32,6 +32,10 @@ namespace Game1_1 {
                 return new List<Coord> { this + Up, this + Left, this + Down, this + Right };
             }
 
+            public static Coord RandomDirection() {
+                return Directions[Math.Abs(Environment.TickCount) % Directions.Length];
+            }
+
             public static Coord
                 Zero = new Coord(0, 0),
                 Up = new Coord(-1, 0),
@@ -47,11 +51,15 @@ namespace Game1_1 {
             public Coord Direction;
             private readonly char _icon;
             public ConsoleColor Color;
+            private readonly int _moveRate;
+            private int _lastMoveTime;
 
-            public Entity(Coord p, char i, ConsoleColor c) {
+            public Entity(Coord p, char i, ConsoleColor c, int m) {
                 Position = p;
                 _icon = i;
                 Color = c;
+                _moveRate = m;
+                _lastMoveTime = Environment.TickCount;
             }
 
             public void Draw() {
@@ -63,8 +71,11 @@ namespace Game1_1 {
             }
 
             public void Move() {
-                Position += Direction;
-                Direction = Coord.Zero;
+                if (Environment.TickCount >= _lastMoveTime + _moveRate) {
+                    Position += Direction;
+                    Direction = Coord.Zero;
+                    _lastMoveTime = Environment.TickCount;
+                }
             }
         }
         
@@ -107,15 +118,12 @@ namespace Game1_1 {
             private Entity _player, _npc, _item;
             private List<Entity> _entities;
             
-            private Difficulty _difficulty;
             private int _lastDraw;
-            private int _lastNpcMove;
             private bool _moveNpcOk = true;
             private const int DrawPause = 100;
 
             private int _startTime;
             private int _timeLimit;
-            private int _npcPause;
             private int _npcIntelligence;
 
             private int[,] _dist;
@@ -125,7 +133,13 @@ namespace Game1_1 {
             private ConsoleKeyInfo _userInput;
 
             public void Init() {
-                SendWelcome();
+                SendInstructions();
+                Difficulty difficulty = ReadDifficultyInput();
+                SendInformation(difficulty);
+                
+                _npcIntelligence = (int) difficulty / (1000 * 100);
+                _timeLimit = ((int) difficulty / 1000) % 100;
+                var npcPause = (int) difficulty % 1000;
 
                 _map = new char[Rows, Cols];
                 for (int row = 0; row < Rows; ++row) {
@@ -134,9 +148,9 @@ namespace Game1_1 {
                     }
                 }
 
-                _player = new Entity(RandValidCoord(), 'P', ConsoleColor.Green);
-                _npc = new Entity(RandValidCoord(), 'N', ConsoleColor.Red);
-                _item = new Entity(RandValidCoord(), 'I', ConsoleColor.Yellow);
+                _player = new Entity(RandValidCoord(), 'P', ConsoleColor.Green, 0);
+                _npc = new Entity(RandValidCoord(), 'N', ConsoleColor.Red, npcPause);
+                _item = new Entity(RandValidCoord(), 'I', ConsoleColor.Yellow, 0);
                 _entities = new List<Entity> {_item, _npc, _player};
 
                 State = GameState.Running;
@@ -145,15 +159,14 @@ namespace Game1_1 {
                 _startTime = Environment.TickCount;
             }
 
-            private void SendWelcome() {
+            private static void SendInstructions() {
                 Console.WriteLine(
                     "You control the Player (P). To win, pick up the item (I) and then collide with the NPC (N).");
                 Console.WriteLine("If you collide with the NPC before picking up the item, you lose!");
-                _difficulty = ReadDifficultyInput();
-                _npcIntelligence = (int) _difficulty / (1000 * 100);
-                _timeLimit = ((int) _difficulty / 1000) % 100;
-                _npcPause = (int) _difficulty % 1000;
-                Console.WriteLine($"\nYou are on difficulty {_difficulty}, so you have {_timeLimit} seconds to win.");
+            }
+
+            private void SendInformation(Difficulty difficulty) {
+                Console.WriteLine($"\nYou are on difficulty {difficulty}, so you have {_timeLimit} seconds to win.");
                 Console.WriteLine("Hit any key to continue.");
                 Console.ReadKey();
                 Console.Clear();
@@ -173,10 +186,10 @@ namespace Game1_1 {
 
             public void Draw() {
                 Console.SetCursorPosition(0, 0);
-                for (int row = 0; row < Rows; ++row) {
+                for (var row = 0; row < Rows; ++row) {
                     // maybe this will speed up the buffering thing
-                    string tmp = "";
-                    for (int col = 0; col < Cols; ++col) {
+                    var tmp = "";
+                    for (var col = 0; col < Cols; ++col) {
                         tmp += _map[row, col];
                     }
                     Console.WriteLine(tmp);
@@ -211,12 +224,8 @@ namespace Game1_1 {
                         State = GameState.Quit;
                         break;
                 }
-
-                if (_npcIntelligence >= Rand.Next(1, 101)) {  // npc has a chance to find shortest path
-                    _npc.Direction = CalculateBestMove(_npc.Position);
-                } else {  // otherwise picks random move
-                    _npc.Direction = Coord.Directions[Math.Abs(Environment.TickCount) % Coord.Directions.Length];
-                }
+                // npc either finds shortest path or picks random move
+                _npc.Direction = _npcIntelligence >= Rand.Next(1, 101) ? CalculateBestMove(_npc.Position) : Coord.RandomDirection();
             }
 
             private Coord CalculateBestMove(Coord start) {
@@ -240,8 +249,8 @@ namespace Game1_1 {
 
             private void CalculateDistanceGrid(Coord start) {  // bfs go brrr
                 _dist = new int[Rows, Cols];
-                for (int row = 0; row < Rows; ++row) {
-                    for (int col = 0; col < Cols; ++col) {
+                for (var row = 0; row < Rows; ++row) {
+                    for (var col = 0; col < Cols; ++col) {
                         _dist[row, col] = LargeDistance;
                     }
                 }
@@ -268,8 +277,6 @@ namespace Game1_1 {
             public void Pause() {
                 while (Environment.TickCount < _lastDraw + DrawPause) Thread.Sleep(5);
                 _lastDraw = Environment.TickCount;
-                _moveNpcOk = _lastDraw >= _lastNpcMove + _npcPause;
-                if (_moveNpcOk) _lastNpcMove = _lastDraw;
             }
 
             public void Update() {
