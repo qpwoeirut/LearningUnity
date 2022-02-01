@@ -1,0 +1,21 @@
+{
+  "name": "com.codegiraffe.nonstandard.unityutility",
+  "version": "0.0.1",
+  "displayName": "NonStandard Unity Utilities",
+  "description": "* Delayed: allows actions to execute on a timer, of frames or seconds\n* Follow: makes one transform follow another\n* LeavParent: automatically disconnect a transform from it's parent on start\n* NextScene: change the scene on DoActivateTrigger\n* OnActiveChange: execute functions when script is Enabled or Disabled",
+  "unity": "2019.4",
+  "dependencies": {
+  },
+  "keywords": [
+    "library",
+    "utility",
+    "scripting",
+    "extensions"
+  ],
+  "author": {
+    "name": "Michael Vaganov",
+    "email": "mvaganov@hotmail.com",
+    "url": "http://www.codegiraffe.com"
+  },
+  "type": "library"
+}

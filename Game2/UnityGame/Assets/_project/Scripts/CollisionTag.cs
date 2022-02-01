@@ -1,0 +1,1 @@
+public enum CollisionTag {None, Floor, Wall, MagicMissile, Player, MrV, Goal, AnotherThing}

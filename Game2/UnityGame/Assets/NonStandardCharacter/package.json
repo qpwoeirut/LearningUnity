@@ -1,0 +1,26 @@
+{
+  "name": "com.codegiraffe.nonstandard.character",
+  "version": "0.0.1",
+  "displayName": "NonStandard Character",
+  "description": "A character controller.\nRequires com.codegiraffe.nonstandard libraries: [\n  https://github.com/mvaganov/NonStandardSystem.git\n  https://github.com/mvaganov/NonStandardInput.git\n  https://github.com/mvaganov/NonStandardEventBind.git\n]",
+  "unity": "2019.4",
+  "dependencies": {
+    "com.unity.inputsystem": "1.0.2",
+    "com.codegiraffe.nonstandard.unityutility": "0.0.1",
+    "com.codegiraffe.nonstandard.input": "0.0.1",
+    "com.codegiraffe.nonstandard.eventbind": "0.0.1"
+  },
+  "keywords": [
+    "library",
+    "utility",
+    "scripting",
+    "extensions",
+    "MonoBehaviour"
+  ],
+  "author": {
+    "name": "Michael Vaganov",
+    "email": "mvaganov@hotmail.com",
+    "url": "http://www.codegiraffe.com"
+  },
+  "type": "library"
+}
