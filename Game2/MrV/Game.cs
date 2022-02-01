@@ -107,15 +107,15 @@ namespace MrV {
 			EntityMobileObject mob0 = (EntityMobileObject)mobObject0;
 			EntityMobileObject mob1 = (EntityMobileObject)mobObject1;
 			if (!wizardGranted && mob0 == mrv && mob1 == player) {
-				SimpleMessageBox("You're a Wizard!\n\nPress space to shoot magic missles!", ConsoleColor.Cyan);
+				SimpleMessageBox("You're a Wizard!\n\nPress space to shoot magic missiles!", ConsoleColor.Cyan);
 				wizardGranted = true;
 				player.icon = new ConsoleTile('W', ConsoleColor.Green, ConsoleColor.DarkGreen);
 				inputSystem.EnableInputMap(new InputMap(new KBind(ConsoleKey.Spacebar, () => {
-					ShootMagicMissle(new ConsoleTile('*', ConsoleColor.Red), player.position, lastValidPlayerDirection);
+					ShootMagicMissile(new ConsoleTile('*', ConsoleColor.Red), player.position, lastValidPlayerDirection);
 				}, "shoot magic missile")));
 			}
 		}
-		void ShootMagicMissle(ConsoleTile tile, Coord position, Coord direction) {
+		void ShootMagicMissile(ConsoleTile tile, Coord position, Coord direction) {
 			int nextMove = 0;
 			long timelimit = Environment.TickCount + 3000;
 			EntityMobileObject missile = null;
