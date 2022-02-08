@@ -119,7 +119,6 @@ namespace Game1_1 {
             private List<Entity> _entities;
             
             private int _lastDraw;
-            private bool _moveNpcOk = true;
             private const int DrawPause = 100;
 
             private int _startTime;
@@ -290,9 +289,7 @@ namespace Game1_1 {
                         entity.Position = previousPos;
                     }
                 }
-
-                if (!_moveNpcOk) _npc.Position = oldNpcPosition;
-
+                
                 if (_player.Position == _item.Position) {
                     _playerHasItem = true;
                     _entities.Remove(_item);
